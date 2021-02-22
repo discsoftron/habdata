@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+	<!-- Required meta tags -->
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<!-- CSS -->
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+	<script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="//code.jquery.com/ui/1.12.0/jquery-ui.min.js" integrity="sha256-eGE6blurk5sHj+rmkfsGYeKyZx3M4bG+ZlFyA7Kns7E=" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+
+	<title>W1HLO HAB Data</title>
+	
+</head>
+
+<body>
+	<div class="container">
+		<h1>W1HLO HAB Data</h1>
+		<div class="jumbotron">
+			<h2>Latest Data</h2>
+			<div id="habDataTable">
+	    		<table class="table">
+	    			<tr><th>Client ID</th><th>Date / Time</th><th>Inside Temp</th><th>Outside Temp</th><th>Pressure</th><th>Battery Voltage</th><th>Solar Voltage</th></tr>
+					{% for habData in habInfo %}
+						<tr><td>{{ habData[0] }}</td><td>{{ habData[1] }} {{ habData[2] }}</td><td>{{ habData[3] }} C</td>
+							<td>{{ habData[4] }} C</td><td>{{ habData[5] }} mbar</td><td>{{ habData[6] }} V</td><td>{{ habData[7] }} V</td></tr>
+					{% endfor %}
+				</table>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
