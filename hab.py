@@ -3,7 +3,7 @@
 # This program allows a hab client to submit data with an HTTP GET request.  Additionally, web clients can view the 
 # most recent data from the hab clients.
 
-from flask import Flask, render_template, session, request
+from flask import Flask, render_template, session, request, jsonify
 import datetime, csv, os.path
 
 # Initialize variables
@@ -38,9 +38,20 @@ def index():
         # Find the index of the list occurence of the uniqueID in logList
         firstIndex = (len([item[0] for item in logLines]) - 1 - [item[0] for item in logLines][::-1].index(uniqueID))
         # Add the data to the most recents list
-        mostRecents.append(logLines[firstIndex])
+        mostRecents.append({"clientID": logLines[firstIndex][0], "date": logLines[firstIndex][1], "time": logLines[firstIndex][2], "insideTemp": logLines[firstIndex][3], "outsideTemp": logLines[firstIndex][4], "pressure": logLines[firstIndex][5], "batteryVoltage": logLines[firstIndex][6], "solarVoltage": logLines[firstIndex][7]}) 
     
-    return render_template('index.html', habInfo=mostRecents)
+    # Create dataset for temperature of a specific client
+    clientID = "TEST"
+    timeLabels = []
+    clientTemps = []
+    clientPressure = []
+    for clientLine in logLines:
+        if clientLine[0] == clientID:
+            timeLabels.append(clientLine[1] + ' ' + clientLine[2])
+            clientTemps.append(clientLine[3])
+            clientPressure.append(clientLine[5])
+    
+    return render_template('index.html', habInfo=mostRecents, timeLabels=timeLabels, clientTemps=clientTemps, clientPressure=clientPressure)
 
 @app.route('/postData', methods=['GET'])
 def postData():
@@ -76,6 +87,36 @@ def postData():
     fd.close()
     
     return render_template('success.html')
+
+@app.route('/getData', methods=['GET'])
+def getData():
+    
+    # API for returning clients and data
+    
+    # Create a list of valid clientIDs
+    # Read whole log file
+    logLines = []
+    
+    with open(logFile, 'r') as fd:
+        reader = csv.reader(fd, delimiter=',')
+        for row in reader:
+            logLines.append(row)
+    fd.close()
+    
+    # Create a list of unique ClientIDs
+    # [item[0] for item in logLines] gives a list of the first element of each log line
+    # set() returns the unique values in a list and list() creates a list from those elements
+    uniqueIDs = list(set([item[0] for item in logLines]))
+    mostRecents = []
+    for uniqueID in uniqueIDs:
+        # Find the index of the list occurence of the uniqueID in logList
+        firstIndex = (len([item[0] for item in logLines]) - 1 - [item[0] for item in logLines][::-1].index(uniqueID))
+        
+        # Add the data to the most recents list
+        
+        mostRecents.append({"clientID": logLines[firstIndex][0], "date": logLines[firstIndex][1], "time": logLines[firstIndex][2], "insideTemp": logLines[firstIndex][3], "outsideTemp": logLines[firstIndex][4], "pressure": logLines[firstIndex][5], "batteryVoltage": logLines[firstIndex][6], "solarVoltage": logLines[firstIndex][7]}) 
+    
+    return jsonify(mostRecents)
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0",port=5001,debug=False)
