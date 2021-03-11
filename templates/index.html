@@ -27,10 +27,12 @@
 			<h2>Latest Data</h2>
 			<div id="habDataTable">
 	    		<table class="table">
-	    			<tr><th>Client ID</th><th>Date / Time</th><th>Inside Temp</th><th>Outside Temp</th><th>Pressure</th><th>Battery Voltage</th><th>Solar Voltage</th><th>Signal Strength</th></tr>
+	    			<tr><th>Client ID</th><th>Date / Time</th><th>Inside Temp</th><th>Outside Temp</th><th>Pressure</th><th>Battery Voltage</th><th>Solar Voltage</th>
+	    				<th>Signal Strength</th><th>Altitude</th></tr>
 					{% for habData in habInfo %}
 						<tr><td>{{ habData['clientID'] }}</td><td>{{ habData['date'] }} {{ habData['time'] }}</td><td>{{ habData['insideTemp'] }} C</td>
-							<td>{{ habData['outsideTemp'] }} C</td><td>{{ habData['pressure'] }} mbar</td><td>{{ habData['batteryVoltage'] }} V</td><td>{{ habData['solarVoltage'] }} V</td><td>{{ habData['signal'] }}</td></tr>
+							<td>{{ habData['outsideTemp'] }} C</td><td>{{ habData['pressure'] }} mbar</td><td>{{ habData['batteryVoltage'] }} V</td>
+							<td>{{ habData['solarVoltage'] }} V</td><td>{{ habData['signal'] }} dBm</td><td>{{ habData['altitude'] }} m</td></tr>
 					{% endfor %}
 				</table>
 			</div>

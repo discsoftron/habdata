@@ -38,7 +38,7 @@ def index():
         # Find the index of the list occurence of the uniqueID in logList
         firstIndex = (len([item[0] for item in logLines]) - 1 - [item[0] for item in logLines][::-1].index(uniqueID))
         # Add the data to the most recents list
-        mostRecents.append({"clientID": logLines[firstIndex][0], "date": logLines[firstIndex][1], "time": logLines[firstIndex][2], "insideTemp": logLines[firstIndex][3], "outsideTemp": logLines[firstIndex][4], "pressure": logLines[firstIndex][5], "batteryVoltage": logLines[firstIndex][6], "solarVoltage": logLines[firstIndex][7], "signal": logLines[firstIndex][8]}) 
+        mostRecents.append({"clientID": logLines[firstIndex][0], "date": logLines[firstIndex][1], "time": logLines[firstIndex][2], "insideTemp": logLines[firstIndex][3], "outsideTemp": logLines[firstIndex][4], "pressure": logLines[firstIndex][5], "batteryVoltage": logLines[firstIndex][6], "solarVoltage": logLines[firstIndex][7], "signal": logLines[firstIndex][8], "altitude": logLines[firstIndex][9]}) 
     
     # Create dataset for temperature of a specific client
     clientID = "TEST"
@@ -66,6 +66,11 @@ def postData():
     volt2 = request.args.get('volt2', None)
     signal = request.args.get('signal', None)
     
+    # Calculate altitude with hypsometric formula
+    seaLevelPressure = 1033.52
+    estAlt = (((seaLevelPressure / float(pressure))**(1/5.257) - 1) * (float(temp1) + 273.15)) / 0.0065
+    estAlt = round(estAlt, 1)
+    
     nowtime = datetime.datetime.now().replace(microsecond=0)
     # Prepend a zero to the hour or minute if needed
     hour = str(nowtime.hour)
@@ -80,7 +85,7 @@ def postData():
     date = nowtime.date()
     
     # Append log entry to text file
-    logRow = [clientID, date, time, temp1, temp2, pressure, volt1, volt2, signal]
+    logRow = [clientID, date, time, temp1, temp2, pressure, volt1, volt2, signal, estAlt]
     
     with open(logFile, 'a') as fd:
         writer = csv.writer(fd)
@@ -115,7 +120,7 @@ def getData():
         
         # Add the data to the most recents list
         
-        mostRecents.append({"clientID": logLines[firstIndex][0], "date": logLines[firstIndex][1], "time": logLines[firstIndex][2], "insideTemp": logLines[firstIndex][3], "outsideTemp": logLines[firstIndex][4], "pressure": logLines[firstIndex][5], "batteryVoltage": logLines[firstIndex][6], "solarVoltage": logLines[firstIndex][7], "signal": logLines[firstIndex][8]}) 
+        mostRecents.append({"clientID": logLines[firstIndex][0], "date": logLines[firstIndex][1], "time": logLines[firstIndex][2], "insideTemp": logLines[firstIndex][3], "outsideTemp": logLines[firstIndex][4], "pressure": logLines[firstIndex][5], "batteryVoltage": logLines[firstIndex][6], "solarVoltage": logLines[firstIndex][7], "signal": logLines[firstIndex][8], "altitude": logLines[firstIndex][9]}) 
     
     return jsonify(mostRecents)
 
