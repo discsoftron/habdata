@@ -29,10 +29,10 @@
 	    		<table class="table">
 	    			<tr><th>Client ID</th><th>Date / Time</th><th>Inside Temp</th><th>Outside Temp</th><th>Pressure</th><th>Battery Voltage</th><th>Solar Voltage</th>
 	    				<th>Signal Strength</th><th>Altitude</th></tr>
-					{% for habData in habInfo %}
-						<tr><td>{{ habData['clientID'] }}</td><td>{{ habData['date'] }} {{ habData['time'] }}</td><td>{{ habData['insideTemp'] }} C</td>
-							<td>{{ habData['outsideTemp'] }} C</td><td>{{ habData['pressure'] }} mbar</td><td>{{ habData['batteryVoltage'] }} V</td>
-							<td>{{ habData['solarVoltage'] }} V</td><td>{{ habData['signal'] }} dBm</td><td>{{ habData['altitude'] }} m</td></tr>
+					{% for habLine in habInfo %}
+						<tr><td>{{ habLine['clientID'] }}</td><td>{{ habLine['date'] }} {{ habLine['time'] }}</td><td>{{ habLine['insideTemp'] }} C</td>
+							<td>{{ habLine['outsideTemp'] }} C</td><td>{{ habLine['pressure'] }} mbar</td><td>{{ habLine['batteryVoltage'] }} V</td>
+							<td>{{ habLine['solarVoltage'] }} V</td><td>{{ habLine['signal'] }} dBm</td><td>{{ habLine['altitude'] }} m</td></tr>
 					{% endfor %}
 				</table>
 			</div>
@@ -43,20 +43,23 @@
 		<h1>Test Graph</h1>
 		<center>
 		<canvas id="testChart" width="400" height="400"></canvas>
+		
 		<script>
 			var ctx = document.getElementById("testChart").getContext('2d');
 			var myChart = new Chart(ctx, {
 				type: 'line',
 				data: {
 					labels: [
-						{% for item in timeLabels %}
-							"{{ item }}",
+
+						{% for clientLine in habData['Abdul C'] %}
+							"{{ clientLine['date'] }}",
 						{% endfor %}
+							
 					],
 					datasets: [{
 						data: [
-							{% for temp in clientTemps %}
-								"{{ temp }}",
+							{% for clientLine in habData['Abdul C'] %}
+								"{{ clientLine['insideTemp'] }}",
 							{% endfor %}
 						],
 						label: "Inside Temperature",
@@ -65,8 +68,8 @@
 						fill: false
 					}, {
 						data: [
-							{% for pressure in clientPressure %}
-								"{{ pressure }}",
+							{% for clientLine in habData['Abdul C'] %}
+								"{{ clientLine['pressure'] }}",
 							{% endfor %}
 						],
 						label: "Barometric Pressure",
@@ -78,7 +81,7 @@
 				options: {
 					title: {
 						display: true,
-						text: 'Test Graph'
+						text: 'Abdul C'
 					},
 					hover: {
 						mode: 'index',
