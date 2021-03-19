@@ -66,7 +66,7 @@ def index():
             clientTemps.append(clientLine[3])
             clientPressure.append(clientLine[5])
     
-    return render_template('index.html', habInfo=mostRecents, habData = dict(habData))
+    return render_template('index.html', habInfo=mostRecents, habData = dict(habData), clientIDs=uniqueIDs)
 
 @app.route('/postData', methods=['GET'])
 def postData():

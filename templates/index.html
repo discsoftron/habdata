@@ -10,11 +10,126 @@
 	<!-- CSS -->
     
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-
+	
 	<script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
     <script src="//code.jquery.com/ui/1.12.0/jquery-ui.min.js" integrity="sha256-eGE6blurk5sHj+rmkfsGYeKyZx3M4bG+ZlFyA7Kns7E=" crossorigin="anonymous"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+	
+	<!--  For the bootstrap js to work, you need to install jquery and popper before it -->
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+	
+	<script type="text/javascript">
+	
+		// Any buttons created in the DOM need to be called after the document is ready
+	    $(document).ready(function() {
+	    	
+	    	var ctx = document.getElementById("habChart").getContext('2d');
+			var myChart = new Chart(ctx, {
+				type: 'line',
+				data: {
+					labels: [
+		
+						{% for clientLine in habData[clientIDs[0]] %}
+							"{{ clientLine['date'] }}",
+						{% endfor %}
+							
+					],
+					datasets: [{
+						data: [
+							{% for clientLine in habData[clientIDs[0]] %}
+								"{{ clientLine['insideTemp'] }}",
+							{% endfor %}
+						],
+						label: "Inside Temperature",
+						yAxisID: 'Temperature',
+						borderColor: "#3e95cd",
+						fill: false
+					}, {
+						data: [
+							{% for clientLine in habData[clientIDs[0]] %}
+								"{{ clientLine['pressure'] }}",
+							{% endfor %}
+						],
+						label: "Barometric Pressure",
+						yAxisID: 'Barometer',
+						borderColor: "#8e5ea2",
+						fill: false
+					}]
+				},
+				options: {
+					title: {
+						display: true,
+						fontSize: 20,
+						text: 'Abdul C'
+					},
+					hover: {
+						mode: 'index',
+						intersect: true
+					},
+					scales: {
+						yAxes: [{
+							id: 'Temperature',
+							type: 'linear',
+							position: 'left',
+						}, {
+							id: 'Barometer',
+							type: 'linear',
+							position: 'right',
+						}]
+					}
+				}
+			});
+	    	
+	    	$('.dropdown-menu a').click(function () {
+				var clientID;
+				var habData = {{ habData|safe }};
+				var habLine = {};
+				var habDataLabels = [];
+				var habDataTemps = [];
+				var habDataPressure = [];
+				
+				clientID = $(this).text();
+				//alert(clientID);
+				
+				//alert(JSON.stringify(habData[clientID]));
+				
+				for (var i = 0; i < habData[clientID].length; ++i) {
+					//alert(habData[clientID][i]["date"])
+					habDataLabels.push(habData[clientID][i]["date"])
+					habDataTemps.push(habData[clientID][i]["insideTemp"])
+					habDataPressure.push(habData[clientID][i]["pressure"])
+				}
+
+				myChart.data.labels = habDataLabels;
+				myChart.data.datasets = [{
+					data: habDataTemps,
+					label: "Inside Temperature",
+					yAxisID: 'Temperature',
+					borderColor: "#3e95cd",
+					fill: false
+				}, {
+					data: habDataPressure,
+					label: "Barometric Pressure",
+					yAxisID: 'Barometer',
+					borderColor: "#8e5ea2",
+					fill: false
+				}];
+				myChart.options.title = 
+					{
+						display: true,
+						fontSize: 20,
+						text: clientID
+					};
+				
+				myChart.update();
+				
+			});
+
+	    });
+		
+	</script>
 	
 	<title>W1HLO HAB Data</title>
 	
@@ -40,68 +155,20 @@
 	</div>
 	<div class="container">
 	
-		<h1>Test Graph</h1>
-		<center>
-		<canvas id="testChart" width="400" height="400"></canvas>
-		
-		<script>
-			var ctx = document.getElementById("testChart").getContext('2d');
-			var myChart = new Chart(ctx, {
-				type: 'line',
-				data: {
-					labels: [
+		<h1>24-hour Data</h1>
+		<div class="dropdown">
+			<button class="btn btn-secondary dropdown-toggle" type="button" id="chartDataSelect" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+				Choose Client
+			</button>
+			<div class="dropdown-menu" aria-labelledby="chartDataSelect">
+				{% for clientID in clientIDs %}
+				<a class="dropdown-item" href="#">{{ clientID }}</a>
+				{% endfor %}
+			</div>
+		</div>
 
-						{% for clientLine in habData['Abdul C'] %}
-							"{{ clientLine['date'] }}",
-						{% endfor %}
-							
-					],
-					datasets: [{
-						data: [
-							{% for clientLine in habData['Abdul C'] %}
-								"{{ clientLine['insideTemp'] }}",
-							{% endfor %}
-						],
-						label: "Inside Temperature",
-						yAxisID: 'Temperature',
-						borderColor: "#3e95cd",
-						fill: false
-					}, {
-						data: [
-							{% for clientLine in habData['Abdul C'] %}
-								"{{ clientLine['pressure'] }}",
-							{% endfor %}
-						],
-						label: "Barometric Pressure",
-						yAxisID: 'Barometer',
-						borderColor: "#8e5ea2",
-						fill: false
-					}]
-				},
-				options: {
-					title: {
-						display: true,
-						text: 'Abdul C'
-					},
-					hover: {
-						mode: 'index',
-						intersect: true
-					},
-					scales: {
-						yAxes: [{
-							id: 'Temperature',
-							type: 'linear',
-							position: 'left',
-						}, {
-							id: 'Barometer',
-							type: 'linear',
-							position: 'right',
-						}]
-					}
-				}
-			});
-			
-		</script>
+		<center>
+			<canvas id="habChart" width="400" height="400"></canvas>
 		</center>
 	
 	</div>
