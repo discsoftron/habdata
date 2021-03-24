@@ -80,17 +80,24 @@ def postData():
     volt1 = request.args.get('volt1', None)
     volt2 = request.args.get('volt2', None)
     signal = request.args.get('signal', None)
+    alt = request.args.get('alt', None)
     
-    # Get the barometric pressure at sea level for the area (KGON) from weather.gov and convert to hPa
-    weatherApi = requests.get('https://api.weather.gov/stations/KGON/observations/latest')
-    seaLevelPressure = weatherApi.json()['properties']['seaLevelPressure']['value'] / 100.0
-    print ("seaLevelPressure: " + str(seaLevelPressure))
+    # If the altitude wasn't sent, calculate it
     
-    # Calculate altitude with hypsometric formula
-    estAlt = (((seaLevelPressure / pressure)**(1/5.257) - 1) * (float(temp1) + 273.15)) / 0.0065
-    estAlt = round(estAlt, 1)
+    if alt is None:
+    
+        # Get the barometric pressure at sea level for the area (KGON) from weather.gov and convert to hPa
+        weatherApi = requests.get('https://api.weather.gov/stations/KGON/observations/latest')
+        seaLevelPressure = weatherApi.json()['properties']['seaLevelPressure']['value'] / 100.0
+        print ("seaLevelPressure: " + str(seaLevelPressure))
+        
+        # Calculate altitude with hypsometric formula
+        alt = (((seaLevelPressure / pressure)**(1/5.257) - 1) * (float(temp1) + 273.15)) / 0.0065
+        alt = round(alt, 1)
+        
     
     nowtime = datetime.datetime.now().replace(microsecond=0)
+    (date,time) = str(nowtime).split(" ")
     # Prepend a zero to the hour or minute if needed
     #hour = str(nowtime.hour)
     #if (len(hour) == 1):
@@ -104,7 +111,7 @@ def postData():
     #date = nowtime.date()
     
     # Append log entry to text file
-    logRow = [clientID, date, time, temp1, temp2, pressure, volt1, volt2, signal, estAlt]
+    logRow = [clientID, date, time, temp1, temp2, pressure, volt1, volt2, signal, alt]
     
     with open(logFile, 'a') as fd:
         writer = csv.writer(fd)
