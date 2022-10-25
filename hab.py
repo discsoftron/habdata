@@ -43,7 +43,7 @@ def index():
         mostRecents.append({"clientID": logLines[firstIndex][0], "date": logLines[firstIndex][1], "time": logLines[firstIndex][2], "insideTemp": logLines[firstIndex][3], "outsideTemp": logLines[firstIndex][4], "pressure": logLines[firstIndex][5], "batteryVoltage": logLines[firstIndex][6], "solarVoltage": logLines[firstIndex][7], "signal": logLines[firstIndex][8], "altitude": logLines[firstIndex][9]}) 
         recentClientDates[uniqueID] = logLines[firstIndex][1] + " " + logLines[firstIndex][2]
     
-    # Create a dictionary of data of each client's last 24 hours of data
+    # Create a dictionary of data of each client's last 12 hours of data
     nowtime = datetime.datetime.now().replace(microsecond=0)
     habData = defaultdict(list)
     for uniqueID in uniqueIDs:
@@ -51,12 +51,12 @@ def index():
         for clientLine in logLines:
             if clientLine[0] == uniqueID:
                logDate =  datetime.datetime.strptime(clientLine[1] + ' ' + clientLine[2], "%Y-%m-%d %H:%M:%S")
-               if (recentClientDate - logDate).total_seconds() < 86400: # 86400 is the number of seconds in 24 hours
+               if (recentClientDate - logDate).total_seconds() < 43200: # 86400 is the number of seconds in 12 hours
                    # Add client data
                    habData[uniqueID].append({"date": str(logDate), "insideTemp": clientLine[3], "outsideTemp": clientLine[4], "pressure": clientLine[5], "batteryVoltage": clientLine[6], "solarVoltage": clientLine[7], "signal": clientLine[8], "altitude": clientLine[9]})
     
     # Create dataset for temperature of a specific client
-    clientID = "Gabe"
+    clientID = "Dr.G"
     timeLabels = []
     clientTemps = []
     clientPressure = []
@@ -81,21 +81,27 @@ def postData():
     volt2 = request.args.get('volt2', None)
     signal = request.args.get('signal', None)
     alt = request.args.get('alt', None)
+    humidity = request.args.get('humidity', None)
+    gpsLat = request.args.get('lat', None)
+    gpsLong = request.args.get('long', None)
     
     # If the altitude wasn't sent, calculate it
     
     if alt is None:
-    
+        # Calculate the estimated altitude
         # Get the barometric pressure at sea level for the area (KGON) from weather.gov and convert to hPa
         weatherApi = requests.get('https://api.weather.gov/stations/KGON/observations/latest')
-        seaLevelPressure = weatherApi.json()['properties']['seaLevelPressure']['value'] / 100.0
-        print ("seaLevelPressure: " + str(seaLevelPressure))
-        
-        # Calculate altitude with hypsometric formula
-        alt = (((seaLevelPressure / pressure)**(1/5.257) - 1) * (float(temp1) + 273.15)) / 0.0065
-        alt = round(alt, 1)
-        
-    
+        seaLevelPressureNOAA = weatherApi.json()['properties']['seaLevelPressure']['value']
+        if seaLevelPressureNOAA:
+            seaLevelPressure = float(seaLevelPressureNOAA) / 100.0
+            # Calculate altitude with hypsometric formula
+            estAlt = (((seaLevelPressure / pressure)**(1/5.257) - 1) * (float(temp1) + 273.15)) / 0.0065
+            estAlt = round(estAlt, 1)
+            alt = "*" + str(estAlt)
+        else:
+            # If for some reason the seaLevelPressure isn't being reported from NOAA, then set the pressure to that of average sea level
+            alt = "*NA"
+
     nowtime = datetime.datetime.now().replace(microsecond=0)
     (date,time) = str(nowtime).split(" ")
     # Prepend a zero to the hour or minute if needed
@@ -111,7 +117,7 @@ def postData():
     #date = nowtime.date()
     
     # Append log entry to text file
-    logRow = [clientID, date, time, temp1, temp2, pressure, volt1, volt2, signal, alt]
+    logRow = [clientID, date, time, temp1, temp2, pressure, volt1, volt2, signal, alt, gpsLat, gpsLong]
     
     with open(logFile, 'a') as fd:
         writer = csv.writer(fd)
@@ -143,10 +149,8 @@ def getData():
     for uniqueID in uniqueIDs:
         # Find the index of the list occurence of the uniqueID in logList
         firstIndex = (len([item[0] for item in logLines]) - 1 - [item[0] for item in logLines][::-1].index(uniqueID))
-        
         # Add the data to the most recents list
-        
-        mostRecents.append({"clientID": logLines[firstIndex][0], "date": logLines[firstIndex][1], "time": logLines[firstIndex][2], "insideTemp": logLines[firstIndex][3], "outsideTemp": logLines[firstIndex][4], "pressure": logLines[firstIndex][5], "batteryVoltage": logLines[firstIndex][6], "solarVoltage": logLines[firstIndex][7], "signal": logLines[firstIndex][8], "altitude": logLines[firstIndex][9]}) 
+        mostRecents.append({"clientID": logLines[firstIndex][0], "date": logLines[firstIndex][1], "time": logLines[firstIndex][2], "insideTemp": logLines[firstIndex][3], "outsideTemp": logLines[firstIndex][4], "pressure": logLines[firstIndex][5], "batteryVoltage": logLines[firstIndex][6], "solarVoltage": logLines[firstIndex][7], "signal": logLines[firstIndex][8], "altitude": logLines[firstIndex][9], "lat": logLines[firstIndex][10], "long": logLines[firstIndex][11]}) 
     
     return jsonify(mostRecents)
 
